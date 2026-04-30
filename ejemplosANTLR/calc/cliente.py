@@ -1,48 +1,54 @@
 from antlr4 import *
 from antlr.ExprLexer import ExprLexer
-from antlr.ExprParser  import ExprParser
+from antlr.ExprParser import ExprParser
 from antlr.ExprListener import ExprListener
-import sys
 
-r = []
-def cast(x): return lambda: int(x)
-def mult(x, y): return lambda: x()*y()
-def div(x, y): return lambda: x()/y()
-def add(x, y): return lambda: x()+y()
-def sub(x, y): return lambda: x()-y()
 
-class KeyPrinter(ExprListener):
-    def exitMult(self, ctx):         
-        r.append(mult(r.pop(), r.pop()))
+class PrefixPrinter(ExprListener):
+    # enterXxx = el nodo se visita ANTES que sus hijos → operador primero = prefijo
+    def enterInt(self, ctx):
+        print(ctx.INT().getText(), end=' ')
 
-    def exitAdd(self, ctx):         
-        r.append(add(r.pop(), r.pop()))
+    def enterMult(self, ctx):
+        print('x', end=' ')
 
-    def exitDiv(self, ctx):
-        y = r.pop()
-        x = r.pop()
-        r.append(div(x, y))
+    def enterDiv(self, ctx):
+        print('/', end=' ')
 
-    def exitSub(self, ctx):         
-        y = r.pop()
-        x = r.pop()
-        r.append(sub(x, y))
+    def enterAdd(self, ctx):
+        print('+', end=' ')
 
+    def enterSub(self, ctx):
+        print('-', end=' ')
+
+
+
+class PostfixPrinter(ExprListener):
+    # exitXxx = postfijo  →  cambia a enterXxx para prefijo
     def exitInt(self, ctx):
-        print(ctx.INT().getText())
-        r.append(cast(ctx.INT().getText()))
+        print(ctx.INT().getText(), end=' ')
+    def exitMult(self, ctx):
+        print('x', end=' ')
+    def exitDiv(self, ctx):
+        print('/', end=' ')
+    def exitAdd(self, ctx):
+        print('+', end=' ')
+    def exitSub(self, ctx):
+        print('-', end=' ')
+
 
 def main(argv):
-    input = FileStream("ejemplo.txt")
-    lexer = ExprLexer(input)
-    stream = CommonTokenStream(lexer)
-    parser = ExprParser(stream)
+    # input =
+    #
+    # lexer =
+    # stream =
+    parser = ExprParser(CommonTokenStream(ExprLexer(FileStream("ejemplo.txt"))))
     tree = parser.prog()
-    printer = KeyPrinter()
+
+    printer = PostfixPrinter()
     walker = ParseTreeWalker()
     walker.walk(printer, tree)
-    print (r[0])
-    print (r[0]())
+    print()
 
 if __name__ == '__main__':
     main("")
